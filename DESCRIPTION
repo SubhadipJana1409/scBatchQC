@@ -20,7 +20,7 @@ License: MIT + file LICENSE
 URL: https://github.com/SubhadipJana1409/scBatchQC
 BugReports: https://github.com/SubhadipJana1409/scBatchQC/issues
 biocViews: SingleCell, QualityControl, BatchEffect, StatisticalMethod,
-           Transcriptomics, GeneExpression
+           Transcriptomics, GeneExpression,CellBasedAssays, Sequencing, WorkflowStep
 Encoding: UTF-8
 LazyData: false
 Depends:
