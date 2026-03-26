@@ -28,6 +28,12 @@ knitr::opts_chunk$set(
 
 # Introduction
 
+`scBatchQC` is a Bioconductor package for **batch-aware quality
+control** of multi-sample single-cell RNA-seq data. It provides
+calibrated, per-batch QC thresholds using empirical Bayes shrinkage,
+so you don't over-filter low-depth batches or under-filter
+high-depth ones.
+
 ## The problem
 
 In multi-batch single-cell RNA-seq experiments, standard QC tools like
