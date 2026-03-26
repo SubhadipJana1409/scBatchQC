@@ -1,9 +1,8 @@
 ---
 title: "Batch-aware QC for multi-sample scRNA-seq with scBatchQC"
 author:
-  - name: "Your Name"
-    affiliation: "Your Institution"
-    email: "your@email.com"
+  - name: "Subhadip Jana"
+    email: "subhadipjana1409@gmail.com"
 date: "`r Sys.Date()`"
 output:
   BiocStyle::html_document:
