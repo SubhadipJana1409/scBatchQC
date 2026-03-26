@@ -35,6 +35,9 @@
 #' Amezquita RA et al. (2020). Orchestrating single-cell analysis with
 #' Bioconductor. \emph{Nature Methods}, 17, 137-145.
 #'
+#' @importClassesFrom SingleCellExperiment SingleCellExperiment
+#' @importFrom rlang .data
+#'
 #' @docType package
 #' @name scBatchQC-package
 #' @aliases scBatchQC
