@@ -64,8 +64,10 @@
 #' sce$batch <- rep(c("B1", "B2"), each = 50)
 #'
 #' cells_loaded <- c(B1 = 5000, B2 = 8000)
-#' sce <- estimateBatchDoubletRate(sce, batch = "batch",
-#'                                  cells_loaded = cells_loaded)
+#' sce <- estimateBatchDoubletRate(sce,
+#'     batch = "batch",
+#'     cells_loaded = cells_loaded
+#' )
 #' sce$scBatchQC_doublet_rate
 #'
 #' @seealso \code{\link{batchAwareQCMetrics}}, \code{\link{plotBatchQC}}
@@ -76,21 +78,25 @@
 #' @importFrom stats lm coef setNames
 #' @export
 estimateBatchDoubletRate <- function(sce,
-                                      batch             = NULL,
-                                      cells_loaded      = NULL,
-                                      protocol          = NULL,
-                                      observed_doublets = NULL,
-                                      return_sce        = TRUE) {
+                                     batch = NULL,
+                                     cells_loaded = NULL,
+                                     protocol = NULL,
+                                     observed_doublets = NULL,
+                                     return_sce = TRUE) {
     # ── Validation ───────────────────────────────────────────────
-    if (!is(sce, "SingleCellExperiment"))
+    if (!is(sce, "SingleCellExperiment")) {
         stop("'sce' must be a SingleCellExperiment object.")
-    if (is.null(batch))
+    }
+    if (is.null(batch)) {
         stop("'batch' must be specified; it names a colData column.")
-    if (!batch %in% names(colData(sce)))
+    }
+    if (!batch %in% names(colData(sce))) {
         stop("'batch' column '", batch, "' not found in colData(sce).")
+    }
     if (!is.null(observed_doublets) &&
-        !observed_doublets %in% names(colData(sce)))
+        !observed_doublets %in% names(colData(sce))) {
         stop("'observed_doublets' column not found in colData(sce).")
+    }
 
     # ── Protocol baseline k values ─────────────────────────────
     # Empirical constants from 10x Genomics technical documentation and
@@ -111,29 +117,40 @@ estimateBatchDoubletRate <- function(sce,
 
     # ── Cells loaded: fall back if not supplied ─────────────
     if (is.null(cells_loaded)) {
-        message("'cells_loaded' not supplied; using observed cell counts ",
-                "as proxy. Doublet rates will be underestimates.")
+        message(
+            "'cells_loaded' not supplied; using observed cell counts ",
+            "as proxy. Doublet rates will be underestimates."
+        )
         cells_loaded <- as.numeric(n_obs)
         names(cells_loaded) <- batch_levels
     } else {
         # Check all batch levels are covered
         missing_b <- setdiff(batch_levels, names(cells_loaded))
-        if (length(missing_b) > 0)
-            stop("'cells_loaded' missing entries for batches: ",
-                 paste(missing_b, collapse = ", "))
+        if (length(missing_b) > 0) {
+            stop(
+                "'cells_loaded' missing entries for batches: ",
+                paste(missing_b, collapse = ", ")
+            )
+        }
     }
 
     # ── Protocol lookup ────────────────────────────────────────
     if (is.null(protocol)) {
-        k_values <- setNames(rep(k_map["default"], length(batch_levels)),
-                             batch_levels)
+        k_values <- setNames(
+            rep(k_map["default"], length(batch_levels)),
+            batch_levels
+        )
     } else {
         missing_p <- setdiff(batch_levels, names(protocol))
-        if (length(missing_p) > 0)
-            stop("'protocol' missing entries for batches: ",
-                 paste(missing_p, collapse = ", "))
+        if (length(missing_p) > 0) {
+            stop(
+                "'protocol' missing entries for batches: ",
+                paste(missing_p, collapse = ", ")
+            )
+        }
         k_values <- k_map[ifelse(protocol[batch_levels] %in% names(k_map),
-                                  protocol[batch_levels], "default")]
+            protocol[batch_levels], "default"
+        )]
         names(k_values) <- batch_levels
     }
 
@@ -147,32 +164,39 @@ estimateBatchDoubletRate <- function(sce,
     # ── Calibration against observed doublets ───────────────────
     if (!is.null(observed_doublets)) {
         obs_calls <- as.logical(colData(sce)[[observed_doublets]])
-        obs_rate  <- tapply(obs_calls, batch_labels, mean, na.rm = TRUE)
-        obs_rate  <- obs_rate[batch_levels]
+        obs_rate <- tapply(obs_calls, batch_labels, mean, na.rm = TRUE)
+        obs_rate <- obs_rate[batch_levels]
 
         # Shrink estimated rate toward observed rate where available
         valid <- !is.na(obs_rate)
         doublet_rate_est[valid] <-
             0.5 * doublet_rate_est[valid] + 0.5 * obs_rate[valid]
 
-        message("Calibrated doublet rate estimates against '",
-                observed_doublets, "' for ",
-                sum(valid), " batch(es).")
+        message(
+            "Calibrated doublet rate estimates against '",
+            observed_doublets, "' for ",
+            sum(valid), " batch(es)."
+        )
     }
 
     # ── Assemble per-batch summary ───────────────────────────────
     summary_df <- DataFrame(
-        batch            = batch_levels,
-        n_cells_obs      = as.integer(n_obs),
-        cells_loaded     = cells_loaded[batch_levels],
+        batch = batch_levels,
+        n_cells_obs = as.integer(n_obs),
+        cells_loaded = cells_loaded[batch_levels],
         doublet_rate_est = doublet_rate_est,
-        protocol         = if (!is.null(protocol)) protocol[batch_levels]
-                           else rep("10x_v3", length(batch_levels)),
-        row.names        = batch_levels
+        protocol = if (!is.null(protocol)) {
+            protocol[batch_levels]
+        } else {
+            rep("10x_v3", length(batch_levels))
+        },
+        row.names = batch_levels
     )
 
     # ── Return ───────────────────────────────────────────────────
-    if (!return_sce) return(summary_df)
+    if (!return_sce) {
+        return(summary_df)
+    }
 
     # Add per-cell column (rate from their respective batch)
     colData(sce)[["scBatchQC_doublet_rate"]] <-
