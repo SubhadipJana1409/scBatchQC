@@ -73,7 +73,7 @@
 #' @importFrom SummarizedExperiment colData "colData<-"
 #' @importFrom S4Vectors DataFrame
 #' @importFrom methods is
-#' @importFrom stats lm coef
+#' @importFrom stats lm coef setNames
 #' @export
 estimateBatchDoubletRate <- function(sce,
                                       batch             = NULL,
