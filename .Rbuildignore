@@ -4,3 +4,4 @@
 ^\.Rbuildignore$
 ^scBatchQC\.Rproj$
 ^scBatchQC\.BiocCheck$
+^\.Rproj\.user$
