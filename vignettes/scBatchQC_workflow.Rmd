@@ -1,0 +1,199 @@
+---
+title: "Batch-aware QC for multi-sample scRNA-seq with scBatchQC"
+author:
+  - name: "Your Name"
+    affiliation: "Your Institution"
+    email: "your@email.com"
+date: "`r Sys.Date()`"
+output:
+  BiocStyle::html_document:
+    toc: true
+    toc_float: true
+    number_sections: true
+vignette: >
+  %\VignetteIndexEntry{Batch-aware QC for multi-sample scRNA-seq with scBatchQC}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse  = TRUE,
+  comment   = "#>",
+  fig.width = 7,
+  fig.height = 5,
+  message   = FALSE,
+  warning   = FALSE
+)
+```
+
+# Introduction
+
+In multi-batch single-cell RNA-sequencing experiments, cell quality
+control is often performed independently per sample before data
+integration. This approach has a well-known but rarely addressed flaw:
+standard MAD-based outlier thresholds (e.g. `scuttle::isOutlier`) are
+estimated from the global distribution and do not account for
+systematic differences in QC metric distributions across batches.
+
+Consider a study with two batches:
+
+- **Batch A**: high-depth 10x v3 libraries from fresh tissue.
+- **Batch B**: lower-depth 10x v2 libraries from cryopreserved samples.
+
+Applying a single global library-size threshold will either
+over-filter Batch B (removing real cells) or under-filter Batch A
+(keeping low-quality cells) — neither is desirable.
+
+`scBatchQC` addresses this by:
+
+1. Computing per-batch QC metric location (median) and scale (MAD).
+2. Shrinking per-batch estimates toward a global empirical Bayes prior,
+   borrowing strength across batches.
+3. Estimating per-batch doublet rates as a function of cells loaded and
+   protocol type.
+4. Returning a `SingleCellExperiment` with calibrated QC flags in
+   `colData`.
+
+# Installation
+
+```{r install, eval = FALSE}
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("scBatchQC")
+```
+
+# Quick start
+
+```{r quickstart}
+library(scBatchQC)
+library(SingleCellExperiment)
+
+# Simulate a two-batch dataset
+set.seed(123)
+n_genes <- 500
+n_cells <- 200
+
+# Batch 1: higher depth
+counts_b1 <- matrix(rpois(n_genes * 100, lambda = 12),
+                    nrow = n_genes, ncol = 100)
+# Batch 2: lower depth + a few low-quality cells
+counts_b2 <- matrix(rpois(n_genes * 100, lambda = 5),
+                    nrow = n_genes, ncol = 100)
+counts_b2[, 1:5] <- counts_b2[, 1:5] / 10   # inject low-quality cells
+
+counts <- cbind(counts_b1, counts_b2)
+rownames(counts) <- paste0("Gene", seq_len(n_genes))
+rownames(counts)[1:30] <- paste0("MT-", seq_len(30))
+colnames(counts) <- paste0("Cell", seq_len(n_cells))
+
+sce <- SingleCellExperiment(assays = list(counts = counts))
+sce$batch <- rep(c("Batch1_v3", "Batch2_v2"), each = 100)
+sce
+```
+
+# Batch-aware QC metrics
+
+The central function `batchAwareQCMetrics()` computes per-cell QC
+metrics and flags outliers using batch-harmonized MAD thresholds.
+
+```{r qc_metrics}
+sce <- batchAwareQCMetrics(
+    sce,
+    batch           = "batch",
+    nmads           = 3,
+    shrink_strength = 0.5
+)
+
+# QC columns added to colData
+grep("^scBatchQC", names(colData(sce)), value = TRUE)
+```
+
+```{r qc_table}
+# Outlier summary per batch
+table(sce$scBatchQC_outlier, sce$batch)
+```
+
+## How shrinkage works
+
+The `shrink_strength` parameter controls the balance between
+per-batch estimation and global pooling:
+
+- `shrink_strength = 0`: fully per-batch (equivalent to running
+  `scuttle::isOutlier` per batch separately).
+- `shrink_strength = 1`: full pooling (equivalent to global MAD,
+  ignoring batch).
+- `shrink_strength = 0.5` (default): empirical Bayes midpoint.
+
+For batches with very few cells (< 50), we recommend increasing
+`shrink_strength` to 0.7–0.9.
+
+# Visualizing QC distributions
+
+```{r plot_qc, fig.cap = "QC metric distributions per batch. Red dashed lines indicate batch-harmonized upper thresholds. Red points are cells flagged as outliers."}
+plotBatchQC(sce, batch = "batch")
+```
+
+# Estimating batch doublet rates
+
+```{r doublet_rates}
+cells_loaded <- c(Batch1_v3 = 8000, Batch2_v2 = 5000)
+
+sce <- estimateBatchDoubletRate(
+    sce,
+    batch        = "batch",
+    cells_loaded = cells_loaded,
+    protocol     = c(Batch1_v3 = "10x_v3", Batch2_v2 = "10x_v2")
+)
+
+# Per-batch estimated doublet rates (as proportion of recovered cells)
+tapply(sce$scBatchQC_doublet_rate, sce$batch, unique)
+```
+
+The doublet rate model follows the empirical relationship from 10x
+Genomics documentation: approximately 0.8% doublets per 1,000 cells
+loaded on the Chromium controller.
+
+# Exploring thresholds interactively
+
+`harmonizeQCThresholds()` lets you explore how the number of flagged
+cells changes across different MAD multipliers without re-running the
+full pipeline.
+
+```{r threshold_sweep}
+# Sweep from 2 to 4 MADs
+results <- lapply(c(2, 2.5, 3, 3.5, 4), function(n) {
+    r <- harmonizeQCThresholds(sce, batch = "batch", nmads = n)
+    data.frame(nmads = n,
+               total_flagged = sum(rowSums(as.data.frame(r$n_flagged))))
+})
+do.call(rbind, results)
+```
+
+# Recommended workflow
+
+The recommended full workflow for a multi-batch scRNA-seq study is:
+
+```{r full_workflow, eval = FALSE}
+# Step 1: batch-aware QC flagging
+sce <- batchAwareQCMetrics(sce, batch = "batch", nmads = 3)
+
+# Step 2: estimate doublet rates
+sce <- estimateBatchDoubletRate(sce, batch = "batch",
+                                 cells_loaded = my_cells_loaded)
+
+# Step 3: visualise and inspect
+plotBatchQC(sce, batch = "batch")
+
+# Step 4: remove flagged cells
+sce_filtered <- sce[, !sce$scBatchQC_outlier]
+
+# Step 5: downstream analysis (normalisation, integration, etc.)
+# -> pass sce_filtered to scran, Seurat, Harmony, etc.
+```
+
+# Session information
+
+```{r session}
+sessionInfo()
+```
