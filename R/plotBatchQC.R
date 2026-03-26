@@ -46,6 +46,7 @@
 #'
 #' @importFrom ggplot2 ggplot aes geom_violin geom_jitter facet_wrap
 #'   theme_bw labs geom_hline scale_color_manual theme element_text
+#'   element_blank element_rect element_line
 #' @importFrom SummarizedExperiment colData
 #' @importFrom methods is
 #' @export
