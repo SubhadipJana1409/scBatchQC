@@ -60,52 +60,60 @@
 #' @importFrom methods is
 #' @export
 harmonizeQCThresholds <- function(sce,
-                                   batch           = NULL,
-                                   nmads           = 3,
-                                   shrink_strength = 0.5,
-                                   update_sce      = FALSE) {
+                                  batch = NULL,
+                                  nmads = 3,
+                                  shrink_strength = 0.5,
+                                  update_sce = FALSE) {
     # ── Validation ───────────────────────────────────────────
-    if (!is(sce, "SingleCellExperiment"))
+    if (!is(sce, "SingleCellExperiment")) {
         stop("'sce' must be a SingleCellExperiment object.")
+    }
 
     qc_cols <- grep("^scBatchQC_(sum|detected|subsets_MT_percent)$",
-                    names(colData(sce)), value = TRUE)
-    if (length(qc_cols) == 0)
-        stop("No scBatchQC QC metric columns found in colData(sce). ",
-             "Run batchAwareQCMetrics() first.")
+        names(colData(sce)),
+        value = TRUE
+    )
+    if (length(qc_cols) == 0) {
+        stop(
+            "No scBatchQC QC metric columns found in colData(sce). ",
+            "Run batchAwareQCMetrics() first."
+        )
+    }
 
-    if (!is.null(batch) && !batch %in% names(colData(sce)))
+    if (!is.null(batch) && !batch %in% names(colData(sce))) {
         stop("'batch' column '", batch, "' not found in colData(sce).")
+    }
 
     # ── Reconstruct qc_df from colData ───────────────────────────
     metrics <- sub("^scBatchQC_", "", qc_cols)
     qc_df <- as.data.frame(colData(sce)[qc_cols])
     names(qc_df) <- metrics
 
-    batch_labels <- if (!is.null(batch))
+    batch_labels <- if (!is.null(batch)) {
         as.character(colData(sce)[[batch]])
-    else
+    } else {
         rep("all", ncol(sce))
+    }
     batch_levels <- unique(batch_labels)
 
     # ── Recompute thresholds ───────────────────────────────────
     thresholds <- .computeHarmonizedThresholds(
-        qc_df        = qc_df,
-        metrics      = metrics,
+        qc_df = qc_df,
+        metrics = metrics,
         batch_labels = batch_labels,
         batch_levels = batch_levels,
-        nmads        = nmads,
+        nmads = nmads,
         shrink_strength = shrink_strength
     )
 
     # ── Count flagged cells per batch per metric ─────────────
     n_flagged_list <- lapply(metrics, function(metric) {
         thresh <- thresholds[[metric]]
-        vals   <- qc_df[[metric]]
-        upper  <- thresh[batch_labels, "upper"]
-        lower  <- thresh[batch_labels, "lower"]
+        vals <- qc_df[[metric]]
+        upper <- thresh[batch_labels, "upper"]
+        lower <- thresh[batch_labels, "lower"]
         flagged <- (vals > upper) |
-                   (vals < lower & metric != "subsets_MT_percent")
+            (vals < lower & metric != "subsets_MT_percent")
         tapply(flagged, batch_labels, sum)[batch_levels]
     })
     n_flagged_df <- DataFrame(
@@ -120,22 +128,26 @@ harmonizeQCThresholds <- function(sce,
     if (update_sce) {
         outlier_mat <- mapply(function(metric) {
             thresh <- thresholds[[metric]]
-            vals   <- qc_df[[metric]]
-            upper  <- thresh[batch_labels, "upper"]
-            lower  <- thresh[batch_labels, "lower"]
+            vals <- qc_df[[metric]]
+            upper <- thresh[batch_labels, "upper"]
+            lower <- thresh[batch_labels, "lower"]
             (vals > upper) | (vals < lower & metric != "subsets_MT_percent")
         }, metrics)
 
-        if (is.null(dim(outlier_mat)))
-            outlier_mat <- matrix(outlier_mat, ncol = 1,
-                                  dimnames = list(NULL, metrics))
+        if (is.null(dim(outlier_mat))) {
+            outlier_mat <- matrix(outlier_mat,
+                ncol = 1,
+                dimnames = list(NULL, metrics)
+            )
+        }
 
-        outlier_any    <- rowSums(outlier_mat, na.rm = TRUE) > 0
-        outlier_reason <- apply(outlier_mat, 1, function(x)
-            paste(metrics[x], collapse = "; "))
+        outlier_any <- rowSums(outlier_mat, na.rm = TRUE) > 0
+        outlier_reason <- apply(outlier_mat, 1, function(x) {
+            paste(metrics[x], collapse = "; ")
+        })
         outlier_reason[outlier_reason == ""] <- NA_character_
 
-        colData(sce)[["scBatchQC_outlier"]]        <- outlier_any
+        colData(sce)[["scBatchQC_outlier"]] <- outlier_any
         colData(sce)[["scBatchQC_outlier_reason"]] <- outlier_reason
 
         out$sce <- sce
