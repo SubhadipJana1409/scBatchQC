@@ -3,9 +3,9 @@ Type: Package
 Title: Batch-Aware Cell Quality Control for Single-Cell RNA-seq
 Version: 0.99.0
 Authors@R: c(
-    person("Your", "Name", role = c("aut", "cre"),
-           email = "your@email.com",
-           comment = c(ORCID = "0000-0000-0000-0000")))
+    person("Subhadip", "Jana", role = c("aut", "cre"),
+           email = "subhadipjana1409@gmail.com",
+           comment = c(ORCID = "0009-0003-7860-2853")))
 Description:
     scBatchQC provides a hierarchical empirical Bayes framework for
     quality control in multi-sample, multi-batch single-cell RNA-seq
@@ -17,8 +17,8 @@ Description:
     augmented colData with per-cell QC flags and batch-adjusted doublet
     scores.
 License: MIT + file LICENSE
-URL: https://github.com/yourusername/scBatchQC
-BugReports: https://github.com/yourusername/scBatchQC/issues
+URL: https://github.com/SubhadipJana1409/scBatchQC
+BugReports: https://github.com/SubhadipJana1409/scBatchQC/issues
 biocViews: SingleCell, QualityControl, BatchEffect, StatisticalMethod,
            Transcriptomics, GeneExpression
 Encoding: UTF-8
@@ -44,5 +44,5 @@ Suggests:
     TENxPBMCData,
     withr
 VignetteBuilder: knitr
-RoxygenNote: 7.3.1
+RoxygenNote: 7.3.3
 Config/testthat/edition: 3
