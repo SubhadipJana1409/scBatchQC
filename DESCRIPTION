@@ -24,7 +24,7 @@ biocViews: SingleCell, QualityControl, BatchEffect, StatisticalMethod,
 Encoding: UTF-8
 LazyData: false
 Depends:
-    R (>= 4.3.0)
+    R (>= 4.5.0)
 Imports:
     SingleCellExperiment,
     SummarizedExperiment,
