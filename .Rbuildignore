@@ -2,3 +2,4 @@
 ^.*\.ps1$
 ^LICENSE\.md$
 ^\.Rbuildignore$
+^scBatchQC\.Rproj$
