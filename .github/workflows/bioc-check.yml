@@ -21,51 +21,45 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
-      - name: Query dependencies
+      - name: Install system dependencies
         run: |
-          install.packages('remotes')
-          saveRDS(remotes::dev_package_deps(dependencies = TRUE),
-                  ".github/depends.Rds", version = 2)
-          writeLines(sprintf("R-%i.%i",
-                             getRversion()$major,
-                             getRversion()$minor),
-                     ".github/R-version")
-        shell: Rscript {0}
+          apt-get update -qq
+          apt-get install -y --no-install-recommends \
+            libcurl4-openssl-dev libssl-dev libxml2-dev
 
-      - name: Cache R packages
-        uses: actions/cache@v4
-        with:
-          path: /usr/local/lib/R/host-site-library
-          key: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-1-${{ hashFiles('.github/depends.Rds') }}
-          restore-keys: ${{ runner.os }}-${{ hashFiles('.github/R-version') }}-1-
-
-      - name: Install dependencies
+      - name: Install BiocManager and dependencies
         run: |
-          remotes::install_deps(dependencies = TRUE,
-                                repos = BiocManager::repositories(),
-                                Ncpus = 2L)
-        shell: Rscript {0}
-
-      - name: Install BiocCheck
-        run: |
-          BiocManager::install("BiocCheck")
+          if (!requireNamespace("BiocManager", quietly = TRUE))
+              install.packages("BiocManager")
+          BiocManager::install(ask = FALSE, update = TRUE)
+          BiocManager::install(
+              c("remotes", "BiocCheck"),
+              ask = FALSE, update = FALSE
+          )
+          remotes::install_deps(
+              dependencies = TRUE,
+              repos = BiocManager::repositories(),
+              Ncpus = 2L
+          )
         shell: Rscript {0}
 
       - name: Build package
         run: R CMD build .
 
       - name: Run R CMD check
-        run: R CMD check --no-manual --no-build-vignettes *.tar.gz
+        run: |
+          R CMD check --no-manual \
+            --no-build-vignettes *.tar.gz
 
       - name: Run BiocCheck
         run: |
           BiocCheck::BiocCheck(
-            dir(pattern = "\\.tar\\.gz$"),
-            `new-package`         = TRUE,
-            `no-check-bioc-views` = FALSE,
-            `no-check-coding-practices` = FALSE
+              dir(pattern = "\\.tar\\.gz$"),
+              `new-package` = TRUE,
+              `no-check-bioc-views` = FALSE,
+              `no-check-coding-practices` = FALSE
           )
         shell: Rscript {0}
 
@@ -74,4 +68,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: check-results
-          path: check
+          path: |
+            *.Rcheck
