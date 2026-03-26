@@ -3,3 +3,4 @@
 ^LICENSE\.md$
 ^\.Rbuildignore$
 ^scBatchQC\.Rproj$
+^scBatchQC\.BiocCheck$
