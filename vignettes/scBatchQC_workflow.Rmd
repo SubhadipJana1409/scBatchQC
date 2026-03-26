@@ -17,12 +17,12 @@ vignette: >
 
 ```{r setup, include = FALSE}
 knitr::opts_chunk$set(
-  collapse  = TRUE,
-  comment   = "#>",
-  fig.width = 7,
-  fig.height = 5,
-  message   = FALSE,
-  warning   = FALSE
+    collapse = TRUE,
+    comment = "#>",
+    fig.width = 7,
+    fig.height = 5,
+    message = FALSE,
+    warning = FALSE
 )
 ```
 
@@ -57,8 +57,9 @@ over-filter Batch B (removing real cells) or under-filter Batch A
 # Installation
 
 ```{r install, eval = FALSE}
-if (!requireNamespace("BiocManager", quietly = TRUE))
+if (!requireNamespace("BiocManager", quietly = TRUE)) {
     install.packages("BiocManager")
+}
 BiocManager::install("scBatchQC")
 ```
 
@@ -75,11 +76,13 @@ n_cells <- 200
 
 # Batch 1: higher depth
 counts_b1 <- matrix(rpois(n_genes * 100, lambda = 12),
-                    nrow = n_genes, ncol = 100)
+    nrow = n_genes, ncol = 100
+)
 # Batch 2: lower depth + a few low-quality cells
 counts_b2 <- matrix(rpois(n_genes * 100, lambda = 5),
-                    nrow = n_genes, ncol = 100)
-counts_b2[, 1:5] <- counts_b2[, 1:5] / 10   # inject low-quality cells
+    nrow = n_genes, ncol = 100
+)
+counts_b2[, 1:5] <- counts_b2[, 1:5] / 10 # inject low-quality cells
 
 counts <- cbind(counts_b1, counts_b2)
 rownames(counts) <- paste0("Gene", seq_len(n_genes))
@@ -163,8 +166,10 @@ full pipeline.
 # Sweep from 2 to 4 MADs
 results <- lapply(c(2, 2.5, 3, 3.5, 4), function(n) {
     r <- harmonizeQCThresholds(sce, batch = "batch", nmads = n)
-    data.frame(nmads = n,
-               total_flagged = sum(rowSums(as.data.frame(r$n_flagged))))
+    data.frame(
+        nmads = n,
+        total_flagged = sum(rowSums(as.data.frame(r$n_flagged)))
+    )
 })
 do.call(rbind, results)
 ```
@@ -178,8 +183,10 @@ The recommended full workflow for a multi-batch scRNA-seq study is:
 sce <- batchAwareQCMetrics(sce, batch = "batch", nmads = 3)
 
 # Step 2: estimate doublet rates
-sce <- estimateBatchDoubletRate(sce, batch = "batch",
-                                 cells_loaded = my_cells_loaded)
+sce <- estimateBatchDoubletRate(sce,
+    batch = "batch",
+    cells_loaded = my_cells_loaded
+)
 
 # Step 3: visualise and inspect
 plotBatchQC(sce, batch = "batch")
