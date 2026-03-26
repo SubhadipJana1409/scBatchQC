@@ -2,7 +2,8 @@
 #'
 #' @description
 #' Computes per-cell quality control metrics and identifies outlier cells
-#' using a hierarchical empirical Bayes approach. Unlike \code{scuttle::isOutlier},
+#' using a hierarchical empirical Bayes approach. Unlike
+#' \code{scuttle::isOutlier},
 #' which applies a single global MAD threshold, \code{batchAwareQCMetrics}
 #' estimates batch-specific MAD scales and shrinks them toward a global
 #' prior, preventing over-filtering in high-quality batches and
@@ -14,8 +15,10 @@
 #'   \item Per-batch median \eqn{\mu_b} and MAD \eqn{\sigma_b}.
 #'   \item A shrinkage weight \eqn{w_b} based on batch cell count.
 #'   \item A global prior \eqn{\mu_0, \sigma_0} pooled across batches.
-#'   \item A harmonized threshold \eqn{\tau_b = \mu_b^* + \text{nmads} \times \sigma_b^*}
-#'         where \eqn{\mu_b^*} and \eqn{\sigma_b^*} are the shrinkage estimates.
+#'   \item A harmonized threshold
+#'         \eqn{\tau_b = \mu_b^* + nmads \times \sigma_b^*}
+#'         where \eqn{\mu_b^*} and \eqn{\sigma_b^*} are the
+#'         shrinkage estimates.
 #' }
 #' A cell is flagged as an outlier if any QC metric exceeds its
 #' batch-specific harmonized threshold.
@@ -91,7 +94,7 @@ batchAwareQCMetrics <- function(sce,
                                  mt_pattern      = "^MT-",
                                  shrink_strength = 0.5,
                                  BPPARAM         = SerialParam()) {
-    # ── Input validation ──────────────────────────────────────────────────────
+    # ── Input validation ────────────────────────────────────
     if (!is(sce, "SingleCellExperiment"))
         stop("'sce' must be a SingleCellExperiment object.")
     if (!is.null(batch) && !batch %in% names(colData(sce)))
@@ -102,7 +105,7 @@ batchAwareQCMetrics <- function(sce,
         shrink_strength < 0 || shrink_strength > 1)
         stop("'shrink_strength' must be in [0, 1].")
 
-    # ── Compute per-cell QC metrics ───────────────────────────────────────────
+    # ── Compute per-cell QC metrics ─────────────────────────
     mt_idx <- grep(mt_pattern, rownames(sce))
     subsets <- if (length(mt_idx) > 0)
         list(MT = mt_idx) else list()
@@ -114,7 +117,7 @@ batchAwareQCMetrics <- function(sce,
     if (length(available_metrics) == 0)
         stop("None of the requested metrics found in perCellQCMetrics output.")
 
-    # ── Determine batch labels ────────────────────────────────────────────────
+    # ── Determine batch labels ──────────────────────────────
     if (is.null(batch)) {
         batch_labels <- rep("all", ncol(sce))
         message("No 'batch' supplied; using single-group QC.")
@@ -133,12 +136,13 @@ batchAwareQCMetrics <- function(sce,
         shrink_strength = shrink_strength
     )
 
-    # ── Flag outlier cells ────────────────────────────────────────────────────
+    # ── Flag outlier cells ──────────────────────────────────
     outlier_mat <- mapply(function(metric) {
         thresh_upper <- thresholds[[metric]][batch_labels, "upper"]
         thresh_lower <- thresholds[[metric]][batch_labels, "lower"]
         vals <- qc_df[[metric]]
-        (vals > thresh_upper) | (vals < thresh_lower & metric != "subsets_MT_percent")
+        (vals > thresh_upper) |
+            (vals < thresh_lower & metric != "subsets_MT_percent")
     }, available_metrics)
 
     if (is.null(dim(outlier_mat)))
@@ -151,7 +155,7 @@ batchAwareQCMetrics <- function(sce,
     })
     outlier_reason[outlier_reason == ""] <- NA_character_
 
-    # ── Write back to colData ─────────────────────────────────────────────────
+    # ── Write back to colData ───────────────────────────────
     for (m in available_metrics) {
         colData(sce)[[paste0("scBatchQC_", m)]] <- qc_df[[m]]
     }
@@ -162,7 +166,7 @@ batchAwareQCMetrics <- function(sce,
 }
 
 
-# ── Internal helpers ──────────────────────────────────────────────────────────
+# ── Internal helpers ────────────────────────────────────────
 
 #' Compute harmonized (shrinkage-based) QC thresholds
 #'
@@ -192,8 +196,12 @@ batchAwareQCMetrics <- function(sce,
             sqrt(s$n), numeric(1))
         weights <- weights / sum(weights)
 
-        global_median <- sum(weights * vapply(batch_stats, `[[`, numeric(1), "median"))
-        global_mad    <- sum(weights * vapply(batch_stats, `[[`, numeric(1), "mad"))
+        global_median <- sum(
+            weights * vapply(batch_stats, `[[`, numeric(1), "median")
+        )
+        global_mad <- sum(
+            weights * vapply(batch_stats, `[[`, numeric(1), "mad")
+        )
 
         # Shrinkage: batch estimate → global prior
         out <- lapply(batch_levels, function(b) {
