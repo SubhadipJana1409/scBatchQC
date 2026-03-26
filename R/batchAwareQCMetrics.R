@@ -87,35 +87,45 @@
 #' @importFrom stats median mad
 #' @export
 batchAwareQCMetrics <- function(sce,
-                                 batch           = NULL,
-                                 metrics         = c("sum", "detected",
-                                                     "subsets_MT_percent"),
-                                 nmads           = 3,
-                                 mt_pattern      = "^MT-",
-                                 shrink_strength = 0.5,
-                                 BPPARAM         = SerialParam()) {
+                                batch = NULL,
+                                metrics = c(
+                                    "sum", "detected",
+                                    "subsets_MT_percent"
+                                ),
+                                nmads = 3,
+                                mt_pattern = "^MT-",
+                                shrink_strength = 0.5,
+                                BPPARAM = SerialParam()) {
     # ── Input validation ────────────────────────────────────
-    if (!is(sce, "SingleCellExperiment"))
+    if (!is(sce, "SingleCellExperiment")) {
         stop("'sce' must be a SingleCellExperiment object.")
-    if (!is.null(batch) && !batch %in% names(colData(sce)))
+    }
+    if (!is.null(batch) && !batch %in% names(colData(sce))) {
         stop("'batch' column '", batch, "' not found in colData(sce).")
-    if (!is.numeric(nmads) || nmads <= 0)
+    }
+    if (!is.numeric(nmads) || nmads <= 0) {
         stop("'nmads' must be a positive number.")
+    }
     if (!is.numeric(shrink_strength) ||
-        shrink_strength < 0 || shrink_strength > 1)
+        shrink_strength < 0 || shrink_strength > 1) {
         stop("'shrink_strength' must be in [0, 1].")
+    }
 
     # ── Compute per-cell QC metrics ─────────────────────────
     mt_idx <- grep(mt_pattern, rownames(sce))
-    subsets <- if (length(mt_idx) > 0)
-        list(MT = mt_idx) else list()
+    subsets <- if (length(mt_idx) > 0) {
+        list(MT = mt_idx)
+    } else {
+        list()
+    }
 
     qc_df <- perCellQCMetrics(sce, subsets = subsets, BPPARAM = BPPARAM)
 
     # Normalise metric names (handle missing MT when no MT genes found)
     available_metrics <- intersect(metrics, names(qc_df))
-    if (length(available_metrics) == 0)
+    if (length(available_metrics) == 0) {
         stop("None of the requested metrics found in perCellQCMetrics output.")
+    }
 
     # ── Determine batch labels ──────────────────────────────
     if (is.null(batch)) {
@@ -128,11 +138,11 @@ batchAwareQCMetrics <- function(sce,
 
     # ── Estimate per-batch + global prior ────────────────────────────────────
     thresholds <- .computeHarmonizedThresholds(
-        qc_df      = qc_df,
-        metrics    = available_metrics,
+        qc_df = qc_df,
+        metrics = available_metrics,
         batch_labels = batch_labels,
         batch_levels = batch_levels,
-        nmads      = nmads,
+        nmads = nmads,
         shrink_strength = shrink_strength
     )
 
@@ -145,9 +155,12 @@ batchAwareQCMetrics <- function(sce,
             (vals < thresh_lower & metric != "subsets_MT_percent")
     }, available_metrics)
 
-    if (is.null(dim(outlier_mat)))
-        outlier_mat <- matrix(outlier_mat, ncol = 1,
-                              dimnames = list(NULL, available_metrics))
+    if (is.null(dim(outlier_mat))) {
+        outlier_mat <- matrix(outlier_mat,
+            ncol = 1,
+            dimnames = list(NULL, available_metrics)
+        )
+    }
 
     outlier_any <- rowSums(outlier_mat, na.rm = TRUE) > 0
     outlier_reason <- apply(outlier_mat, 1, function(x) {
@@ -159,7 +172,7 @@ batchAwareQCMetrics <- function(sce,
     for (m in available_metrics) {
         colData(sce)[[paste0("scBatchQC_", m)]] <- qc_df[[m]]
     }
-    colData(sce)[["scBatchQC_outlier"]]        <- outlier_any
+    colData(sce)[["scBatchQC_outlier"]] <- outlier_any
     colData(sce)[["scBatchQC_outlier_reason"]] <- outlier_reason
 
     sce
@@ -173,27 +186,28 @@ batchAwareQCMetrics <- function(sce,
 #' @keywords internal
 #' @noRd
 .computeHarmonizedThresholds <- function(qc_df, metrics, batch_labels,
-                                          batch_levels, nmads,
-                                          shrink_strength) {
+                                         batch_levels, nmads,
+                                         shrink_strength) {
     thresholds <- lapply(metrics, function(metric) {
         vals <- qc_df[[metric]]
 
         # Per-batch location and scale estimates
         batch_stats <- lapply(batch_levels, function(b) {
             idx <- batch_labels == b
-            v   <- vals[idx]
-            v   <- v[is.finite(v)]
+            v <- vals[idx]
+            v <- v[is.finite(v)]
             list(
                 n      = sum(idx),
                 median = median(v),
-                mad    = max(mad(v), 1e-6)   # guard against zero MAD
+                mad    = max(mad(v), 1e-6) # guard against zero MAD
             )
         })
         names(batch_stats) <- batch_levels
 
         # Global prior (weighted by sqrt(n) for robustness)
-        weights <- vapply(batch_stats, function(s)
-            sqrt(s$n), numeric(1))
+        weights <- vapply(batch_stats, function(s) {
+            sqrt(s$n)
+        }, numeric(1))
         weights <- weights / sum(weights)
 
         global_median <- sum(
@@ -207,9 +221,9 @@ batchAwareQCMetrics <- function(sce,
         out <- lapply(batch_levels, function(b) {
             s <- batch_stats[[b]]
             shrunken_median <- (1 - shrink_strength) * s$median +
-                                shrink_strength * global_median
-            shrunken_mad    <- (1 - shrink_strength) * s$mad +
-                                shrink_strength * global_mad
+                shrink_strength * global_median
+            shrunken_mad <- (1 - shrink_strength) * s$mad +
+                shrink_strength * global_mad
             c(
                 upper = shrunken_median + nmads * shrunken_mad,
                 lower = shrunken_median - nmads * shrunken_mad
