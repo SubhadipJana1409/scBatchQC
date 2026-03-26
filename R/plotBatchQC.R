@@ -51,20 +51,24 @@
 #' @importFrom methods is
 #' @export
 plotBatchQC <- function(sce,
-                         batch           = NULL,
-                         metrics         = NULL,
-                         show_thresholds = TRUE,
-                         nmads           = 3,
-                         colour_by       = "scBatchQC_outlier",
-                         point_size      = 0.4,
-                         point_alpha     = 0.4) {
-    if (!is(sce, "SingleCellExperiment"))
+                        batch = NULL,
+                        metrics = NULL,
+                        show_thresholds = TRUE,
+                        nmads = 3,
+                        colour_by = "scBatchQC_outlier",
+                        point_size = 0.4,
+                        point_alpha = 0.4) {
+    if (!is(sce, "SingleCellExperiment")) {
         stop("'sce' must be a SingleCellExperiment object.")
+    }
 
     qc_cols <- grep("^scBatchQC_(sum|detected|subsets_MT_percent)$",
-                    names(colData(sce)), value = TRUE)
-    if (length(qc_cols) == 0)
+        names(colData(sce)),
+        value = TRUE
+    )
+    if (length(qc_cols) == 0) {
         stop("No QC columns found. Run batchAwareQCMetrics() first.")
+    }
 
     available_metrics <- sub("^scBatchQC_", "", qc_cols)
     if (is.null(metrics)) {
@@ -80,18 +84,24 @@ plotBatchQC <- function(sce,
         cd$.__batch__. <- "all"
     }
 
-    colour_col <- if (!is.null(colour_by) && colour_by %in% names(cd))
-        colour_by else NULL
+    colour_col <- if (!is.null(colour_by) && colour_by %in% names(cd)) {
+        colour_by
+    } else {
+        NULL
+    }
 
     # Melt into long format (no reshape2 dependency)
     plot_df <- do.call(rbind, lapply(metrics, function(m) {
         col_name <- paste0("scBatchQC_", m)
         data.frame(
-            batch  = cd$.__batch__.,
+            batch = cd$.__batch__.,
             metric = m,
-            value  = cd[[col_name]],
-            colour = if (!is.null(colour_col)) as.character(cd[[colour_col]])
-                     else "all",
+            value = cd[[col_name]],
+            colour = if (!is.null(colour_col)) {
+                as.character(cd[[colour_col]])
+            } else {
+                "all"
+            },
             stringsAsFactors = FALSE
         )
     }))
@@ -103,47 +113,56 @@ plotBatchQC <- function(sce,
         thresh_df <- do.call(rbind, lapply(metrics, function(m) {
             t <- result$thresholds[[m]]
             data.frame(
-                batch  = rownames(t),
+                batch = rownames(t),
                 metric = m,
-                upper  = t$upper,
+                upper = t$upper,
                 stringsAsFactors = FALSE
             )
         }))
     }
 
-    p <- ggplot(plot_df,
-                aes(x = .data[["batch"]], y = .data[["value"]],
-                    colour = .data[["colour"]])) +
+    p <- ggplot(
+        plot_df,
+        aes(
+            x = .data[["batch"]], y = .data[["value"]],
+            colour = .data[["colour"]]
+        )
+    ) +
         geom_violin(fill = NA, colour = "grey60", linewidth = 0.4) +
         geom_jitter(width = 0.15, size = point_size, alpha = point_alpha) +
-        facet_wrap(~ metric, scales = "free_y", ncol = 1,
-                   strip.position = "left") +
+        facet_wrap(~metric,
+            scales = "free_y", ncol = 1,
+            strip.position = "left"
+        ) +
         theme_bw(base_size = 11) +
         theme(
             strip.placement  = "outside",
             strip.background = element_blank(),
             axis.text.x      = element_text(angle = 30, hjust = 1)
         ) +
-        labs(x = "Batch", y = NULL,
-             colour = colour_col,
-             title  = "Batch-aware QC metric distributions")
+        labs(
+            x = "Batch", y = NULL,
+            colour = colour_col,
+            title = "Batch-aware QC metric distributions"
+        )
 
     if (!is.null(colour_col) &&
         all(c("TRUE", "FALSE") %in% unique(plot_df$colour))) {
         p <- p + scale_color_manual(
             values = c("TRUE" = "#E24B4A", "FALSE" = "#888780"),
-            labels = c("TRUE" = "Outlier", "FALSE" = "Pass"))
+            labels = c("TRUE" = "Outlier", "FALSE" = "Pass")
+        )
     }
 
     if (show_thresholds && !is.null(thresh_df)) {
         # Overlay threshold lines per facet
         p <- p + geom_hline(
-            data     = thresh_df,
+            data = thresh_df,
             aes(yintercept = .data[["upper"]]),
             linetype = "dashed",
-            colour   = "#E24B4A",
+            colour = "#E24B4A",
             linewidth = 0.5,
-            alpha    = 0.7,
+            alpha = 0.7,
             inherit.aes = FALSE
         )
     }
