@@ -77,16 +77,20 @@ test_that("number of flagged cells does not exceed total cells", {
 test_that("estimateBatchDoubletRate adds doublet_rate column", {
     sce <- make_sce()
     cells_loaded <- c(B1 = 5000, B2 = 8000)
-    result <- estimateBatchDoubletRate(sce, batch = "batch",
-                                        cells_loaded = cells_loaded)
+    result <- estimateBatchDoubletRate(sce,
+        batch = "batch",
+        cells_loaded = cells_loaded
+    )
     expect_true("scBatchQC_doublet_rate" %in% names(colData(result)))
 })
 
 test_that("doublet rates are in [0, 0.5]", {
     sce <- make_sce()
     cells_loaded <- c(B1 = 5000, B2 = 8000)
-    result <- estimateBatchDoubletRate(sce, batch = "batch",
-                                        cells_loaded = cells_loaded)
+    result <- estimateBatchDoubletRate(sce,
+        batch = "batch",
+        cells_loaded = cells_loaded
+    )
     rates <- result$scBatchQC_doublet_rate
     expect_true(all(rates >= 0))
     expect_true(all(rates <= 0.5))
@@ -94,8 +98,10 @@ test_that("doublet rates are in [0, 0.5]", {
 
 test_that("estimateBatchDoubletRate returns DataFrame when return_sce=FALSE", {
     sce <- make_sce()
-    df <- estimateBatchDoubletRate(sce, batch = "batch",
-                                    return_sce = FALSE)
+    df <- estimateBatchDoubletRate(sce,
+        batch = "batch",
+        return_sce = FALSE
+    )
     expect_s4_class(df, "DataFrame")
     expect_true("doublet_rate_est" %in% names(df))
 })
@@ -103,8 +109,10 @@ test_that("estimateBatchDoubletRate returns DataFrame when return_sce=FALSE", {
 test_that("estimateBatchDoubletRate errors on missing batch labels in cells_loaded", {
     sce <- make_sce()
     expect_error(
-        estimateBatchDoubletRate(sce, batch = "batch",
-                                  cells_loaded = c(B1 = 5000)),
+        estimateBatchDoubletRate(sce,
+            batch = "batch",
+            cells_loaded = c(B1 = 5000)
+        ),
         regexp = "missing entries"
     )
 })
@@ -144,11 +152,15 @@ test_that("tighter nmads flags more cells", {
 
 test_that("BQCResult constructor and accessors work", {
     library(S4Vectors)
-    qf <- DataFrame(low_lib = c(FALSE, TRUE, FALSE),
-                    high_mt = c(FALSE, FALSE, TRUE))
+    qf <- DataFrame(
+        low_lib = c(FALSE, TRUE, FALSE),
+        high_mt = c(FALSE, FALSE, TRUE)
+    )
     ds <- c(0.04, 0.06, 0.05)
-    bs <- DataFrame(batch = c("B1", "B2"),
-                    doublet_rate_est = c(0.04, 0.06))
+    bs <- DataFrame(
+        batch = c("B1", "B2"),
+        doublet_rate_est = c(0.04, 0.06)
+    )
     obj <- BQCResult(qcFlags = qf, doubletScores = ds, batchSummary = bs)
 
     expect_s4_class(obj, "BQCResult")
