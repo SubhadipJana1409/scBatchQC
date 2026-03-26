@@ -81,7 +81,7 @@ estimateBatchDoubletRate <- function(sce,
                                       protocol          = NULL,
                                       observed_doublets = NULL,
                                       return_sce        = TRUE) {
-    # ── Validation ────────────────────────────────────────────────────────────
+    # ── Validation ───────────────────────────────────────────────
     if (!is(sce, "SingleCellExperiment"))
         stop("'sce' must be a SingleCellExperiment object.")
     if (is.null(batch))
@@ -92,7 +92,7 @@ estimateBatchDoubletRate <- function(sce,
         !observed_doublets %in% names(colData(sce)))
         stop("'observed_doublets' column not found in colData(sce).")
 
-    # ── Protocol baseline k values (doublets per cell loaded) ─────────────────
+    # ── Protocol baseline k values ─────────────────────────────
     # Empirical constants from 10x Genomics technical documentation and
     # Chromium Next GEM Single Cell 3' v3.1 User Guide
     k_map <- c(
@@ -106,10 +106,10 @@ estimateBatchDoubletRate <- function(sce,
     batch_labels <- as.character(colData(sce)[[batch]])
     batch_levels <- unique(batch_labels)
 
-    # ── Per-batch observed cell counts ────────────────────────────────────────
+    # ── Per-batch observed cell counts ────────────────────────
     n_obs <- table(batch_labels)[batch_levels]
 
-    # ── Cells loaded: fall back to observed count if not supplied ─────────────
+    # ── Cells loaded: fall back if not supplied ─────────────
     if (is.null(cells_loaded)) {
         message("'cells_loaded' not supplied; using observed cell counts ",
                 "as proxy. Doublet rates will be underestimates.")
@@ -123,7 +123,7 @@ estimateBatchDoubletRate <- function(sce,
                  paste(missing_b, collapse = ", "))
     }
 
-    # ── Protocol lookup ───────────────────────────────────────────────────────
+    # ── Protocol lookup ────────────────────────────────────────
     if (is.null(protocol)) {
         k_values <- setNames(rep(k_map["default"], length(batch_levels)),
                              batch_levels)
@@ -137,14 +137,14 @@ estimateBatchDoubletRate <- function(sce,
         names(k_values) <- batch_levels
     }
 
-    # ── Estimate doublet rate per batch ───────────────────────────────────────
+    # ── Estimate doublet rate per batch ───────────────────────
     doublet_rate_est <- vapply(batch_levels, function(b) {
         rate <- k_values[[b]] * cells_loaded[[b]]
         # Cap at 0.5 — cannot have >50% doublets
         min(rate, 0.5)
     }, numeric(1))
 
-    # ── Optional calibration against observed doublet calls ───────────────────
+    # ── Calibration against observed doublets ───────────────────
     if (!is.null(observed_doublets)) {
         obs_calls <- as.logical(colData(sce)[[observed_doublets]])
         obs_rate  <- tapply(obs_calls, batch_labels, mean, na.rm = TRUE)
@@ -160,7 +160,7 @@ estimateBatchDoubletRate <- function(sce,
                 sum(valid), " batch(es).")
     }
 
-    # ── Assemble per-batch summary ─────────────────────────────────────────────
+    # ── Assemble per-batch summary ───────────────────────────────
     summary_df <- DataFrame(
         batch            = batch_levels,
         n_cells_obs      = as.integer(n_obs),
@@ -171,7 +171,7 @@ estimateBatchDoubletRate <- function(sce,
         row.names        = batch_levels
     )
 
-    # ── Return ────────────────────────────────────────────────────────────────
+    # ── Return ───────────────────────────────────────────────────
     if (!return_sce) return(summary_df)
 
     # Add per-cell column (rate from their respective batch)
