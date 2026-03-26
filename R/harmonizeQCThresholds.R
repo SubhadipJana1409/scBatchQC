@@ -64,7 +64,7 @@ harmonizeQCThresholds <- function(sce,
                                    nmads           = 3,
                                    shrink_strength = 0.5,
                                    update_sce      = FALSE) {
-    # ── Validation ─────────────────────────────────────────────────────────────
+    # ── Validation ───────────────────────────────────────────
     if (!is(sce, "SingleCellExperiment"))
         stop("'sce' must be a SingleCellExperiment object.")
 
@@ -77,7 +77,7 @@ harmonizeQCThresholds <- function(sce,
     if (!is.null(batch) && !batch %in% names(colData(sce)))
         stop("'batch' column '", batch, "' not found in colData(sce).")
 
-    # ── Reconstruct qc_df from existing colData columns ───────────────────────
+    # ── Reconstruct qc_df from colData ───────────────────────────
     metrics <- sub("^scBatchQC_", "", qc_cols)
     qc_df <- as.data.frame(colData(sce)[qc_cols])
     names(qc_df) <- metrics
@@ -88,7 +88,7 @@ harmonizeQCThresholds <- function(sce,
         rep("all", ncol(sce))
     batch_levels <- unique(batch_labels)
 
-    # ── Recompute thresholds ───────────────────────────────────────────────────
+    # ── Recompute thresholds ───────────────────────────────────
     thresholds <- .computeHarmonizedThresholds(
         qc_df        = qc_df,
         metrics      = metrics,
@@ -98,7 +98,7 @@ harmonizeQCThresholds <- function(sce,
         shrink_strength = shrink_strength
     )
 
-    # ── Count flagged cells per batch per metric ───────────────────────────────
+    # ── Count flagged cells per batch per metric ─────────────
     n_flagged_list <- lapply(metrics, function(metric) {
         thresh <- thresholds[[metric]]
         vals   <- qc_df[[metric]]
@@ -116,7 +116,7 @@ harmonizeQCThresholds <- function(sce,
 
     out <- list(thresholds = thresholds, n_flagged = n_flagged_df)
 
-    # ── Optionally rewrite sce ─────────────────────────────────────────────────
+    # ── Optionally rewrite sce ───────────────────────────────
     if (update_sce) {
         outlier_mat <- mapply(function(metric) {
             thresh <- thresholds[[metric]]
