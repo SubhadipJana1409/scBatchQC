@@ -17,8 +17,8 @@ Description:
     augmented colData with per-cell QC flags and batch-adjusted doublet
     scores.
 License: MIT + file LICENSE
-URL: https://github.com/yourusername/scBatchQC
-BugReports: https://github.com/yourusername/scBatchQC/issues
+URL: https://github.com/SubhadipJana1409/scBatchQC
+BugReports: https://github.com/SubhadipJana1409/scBatchQC/issues
 biocViews: SingleCell, QualityControl, BatchEffect, StatisticalMethod,
            Transcriptomics, GeneExpression, Normalization
 Encoding: UTF-8
