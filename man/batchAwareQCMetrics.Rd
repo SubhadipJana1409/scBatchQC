@@ -57,7 +57,8 @@ The input \code{sce} with the following additions to
 }
 \description{
 Computes per-cell quality control metrics and identifies outlier cells
-using a hierarchical empirical Bayes approach. Unlike \code{scuttle::isOutlier},
+using a hierarchical empirical Bayes approach. Unlike
+\code{scuttle::isOutlier},
 which applies a single global MAD threshold, \code{batchAwareQCMetrics}
 estimates batch-specific MAD scales and shrinks them toward a global
 prior, preventing over-filtering in high-quality batches and
@@ -69,8 +70,10 @@ For each QC metric \eqn{m} and batch \eqn{b}, the function estimates:
   \item Per-batch median \eqn{\mu_b} and MAD \eqn{\sigma_b}.
   \item A shrinkage weight \eqn{w_b} based on batch cell count.
   \item A global prior \eqn{\mu_0, \sigma_0} pooled across batches.
-  \item A harmonized threshold \eqn{\tau_b = \mu_b^* + \text{nmads} \times \sigma_b^*}
-        where \eqn{\mu_b^*} and \eqn{\sigma_b^*} are the shrinkage estimates.
+  \item A harmonized threshold
+        \eqn{\tau_b = \mu_b^* + nmads \times \sigma_b^*}
+        where \eqn{\mu_b^*} and \eqn{\sigma_b^*} are the
+        shrinkage estimates.
 }
 A cell is flagged as an outlier if any QC metric exceeds its
 batch-specific harmonized threshold.

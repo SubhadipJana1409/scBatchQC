@@ -84,8 +84,10 @@ sce <- SingleCellExperiment(assays = list(counts = counts))
 sce$batch <- rep(c("B1", "B2"), each = 50)
 
 cells_loaded <- c(B1 = 5000, B2 = 8000)
-sce <- estimateBatchDoubletRate(sce, batch = "batch",
-                                 cells_loaded = cells_loaded)
+sce <- estimateBatchDoubletRate(sce,
+    batch = "batch",
+    cells_loaded = cells_loaded
+)
 sce$scBatchQC_doublet_rate
 
 }
