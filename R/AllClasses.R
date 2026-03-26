@@ -53,7 +53,7 @@ BQCResult <- function(qcFlags, doubletScores, batchSummary, params = list()) {
         params        = params)
 }
 
-# ── Generics ──────────────────────────────────────────────────────────────────
+# ── Generics ────────────────────────────────────────────────
 
 #' @title Accessor for QC flags in a BQCResult
 #' @description Returns the per-cell QC flag \code{DataFrame}.
@@ -103,7 +103,7 @@ setGeneric("doubletScores", function(x, ...) standardGeneric("doubletScores"))
 #' @export
 setGeneric("batchSummary", function(x, ...) standardGeneric("batchSummary"))
 
-# ── Methods ───────────────────────────────────────────────────────────────────
+# ── Methods ─────────────────────────────────────────────────
 
 #' @title Show method for BQCResult
 #' @description Prints a compact summary of a \code{BQCResult} object.
@@ -115,7 +115,8 @@ setMethod("show", "BQCResult", function(object) {
     cat("BQCResult\n")
     cat("  Cells          :", nrow(object@qcFlags), "\n")
     cat("  Batches        :", nrow(object@batchSummary), "\n")
-    cat("  QC metrics     :", paste(names(object@qcFlags), collapse = ", "), "\n")
+    cat("  QC metrics     :",
+        paste(names(object@qcFlags), collapse = ", "), "\n")
     cat("  Doublet range  :",
         round(min(object@doubletScores), 3), "-",
         round(max(object@doubletScores), 3), "\n")
