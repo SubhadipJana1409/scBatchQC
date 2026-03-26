@@ -50,7 +50,8 @@ BQCResult <- function(qcFlags, doubletScores, batchSummary, params = list()) {
         qcFlags       = qcFlags,
         doubletScores = doubletScores,
         batchSummary  = batchSummary,
-        params        = params)
+        params        = params
+    )
 }
 
 # ── Generics ────────────────────────────────────────────────
@@ -115,11 +116,15 @@ setMethod("show", "BQCResult", function(object) {
     cat("BQCResult\n")
     cat("  Cells          :", nrow(object@qcFlags), "\n")
     cat("  Batches        :", nrow(object@batchSummary), "\n")
-    cat("  QC metrics     :",
-        paste(names(object@qcFlags), collapse = ", "), "\n")
-    cat("  Doublet range  :",
+    cat(
+        "  QC metrics     :",
+        paste(names(object@qcFlags), collapse = ", "), "\n"
+    )
+    cat(
+        "  Doublet range  :",
         round(min(object@doubletScores), 3), "-",
-        round(max(object@doubletScores), 3), "\n")
+        round(max(object@doubletScores), 3), "\n"
+    )
     invisible(object)
 })
 
