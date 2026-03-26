@@ -136,7 +136,7 @@ plotBatchQC <- function(sce,
     }
 
     if (show_thresholds && !is.null(thresh_df)) {
-        # Overlay threshold lines (geom_hline per facet via geom_segment workaround)
+        # Overlay threshold lines per facet
         p <- p + geom_hline(
             data     = thresh_df,
             aes(yintercept = .data[["upper"]]),
