@@ -132,7 +132,7 @@ Flag rate: 6.4%
 
 If you use `scBatchQC` in your research, please cite:
 
-> Jana S (2025). scBatchQC: Batch-Aware Cell Quality Control
+> Jana S (2026). scBatchQC: Batch-Aware Cell Quality Control
 > for Single-Cell RNA-seq. R package version 0.99.0.
 > https://github.com/SubhadipJana1409/scBatchQC
 
