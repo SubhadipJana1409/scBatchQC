@@ -53,20 +53,26 @@ BiocManager::install("scBatchQC")
 BiocManager::install("SubhadipJana1409/scBatchQC")
 ```
 
-## Quick start
+## Quick start with real PBMC data
+
+The package ships a subset of real PBMC data from
+[Zheng et al. (2017)](https://doi.org/10.1038/ncomms14049)
+in `inst/extdata/pbmc_small.rds` (193 genes × 300 cells,
+two batches: PBMC\_3k and PBMC\_4k).
 
 ```r
 library(scBatchQC)
 library(SingleCellExperiment)
 
-# Your multi-batch SCE object
-# sce$batch must exist in colData
+# Load the bundled real PBMC data
+sce <- readRDS(system.file("extdata", "pbmc_small.rds",
+                           package = "scBatchQC"))
 
 # Step 1: batch-aware QC flagging
 sce <- batchAwareQCMetrics(sce, batch = "batch", nmads = 3)
 
 # Step 2: estimate doublet rates
-cells_loaded <- c(Batch1 = 8000, Batch2 = 5000)
+cells_loaded <- c(PBMC_3k = 6000, PBMC_4k = 8000)
 sce <- estimateBatchDoubletRate(
     sce,
     batch = "batch",
@@ -89,6 +95,9 @@ sce_filtered <- sce[, !sce$scBatchQC_outlier]
 | `harmonizeQCThresholds()` | Interactive threshold exploration |
 | `plotBatchQC()` | QC distribution violin plots per batch |
 | `BQCResult` | S4 container for batch QC results |
+| `qcFlags()` | Accessor: extract QC flag DataFrame from BQCResult |
+| `doubletScores()` | Accessor: extract doublet scores from BQCResult |
+| `batchSummary()` | Accessor: extract per-batch summary from BQCResult |
 
 ## How the shrinkage works
 
@@ -113,24 +122,74 @@ and `s` is the `shrink_strength` parameter (default 0.5).
 
 ## Example output
 
-Tested on real TENxPBMCData (7,040 cells, 2 batches):
+Tested on real PBMC data from
+[Zheng et al. (2017)](https://doi.org/10.1038/ncomms14049)
+via `TENxPBMCData` (193 genes × 300 cells, 2 batches):
+
+### QC distributions per batch
+
+<p align="center">
+  <img src="man/figures/scBatchQC_demo_plot.png" width="700"
+       alt="QC violin plots per batch with harmonised thresholds">
+</p>
+
+*Violin plots of library size, genes detected, and mitochondrial
+fraction per batch. Dashed red lines = batch-harmonised thresholds.
+Red points = flagged outlier cells.*
+
+### Console summary
 
 ```
 Outlier cells per batch:
         PBMC_3k PBMC_4k
-FALSE      2639    3947
-TRUE         61     393
+FALSE       138     125
+TRUE         12      25
 
 Estimated doublet rates:
 PBMC_3k PBMC_4k
-  0.040   0.064
+  0.045   0.060
 
-Flag rate: 6.4%
+Threshold sweep (nmads):
+  nmads = 2.0 -> 87 cells flagged
+  nmads = 2.5 -> 51 cells flagged
+  nmads = 3.0 -> 38 cells flagged
+  nmads = 3.5 -> 25 cells flagged
+  nmads = 4.0 -> 17 cells flagged
+
+After filtering: 263 / 300 cells retained (12.3% removed)
+```
+
+## Example data
+
+The package includes a subset of real PBMC single-cell RNA-seq
+data for demonstrations and testing:
+
+| File | Description |
+|---|---|
+| `inst/extdata/pbmc_small.rds` | 193 genes × 300 cells, 2 batches (PBMC 3k + 4k) |
+| `inst/scripts/make_example_data.R` | Provenance script documenting how the data was obtained |
+| `inst/scripts/run_full_demo.R` | End-to-end demo exercising all package functions |
+
+**Data source**: Zheng GXY et al. (2017). Massively parallel
+digital transcriptional profiling of single cells.
+*Nature Communications*, 8:14049.
+[doi:10.1038/ncomms14049](https://doi.org/10.1038/ncomms14049)
+
+To run the full demo:
+
+```r
+# From the package root
+source(system.file("scripts", "run_full_demo.R",
+                   package = "scBatchQC"))
 ```
 
 ## Citation
 
 If you use `scBatchQC` in your research, please cite:
+
+```r
+citation("scBatchQC")
+```
 
 > Jana S (2026). scBatchQC: Batch-Aware Cell Quality Control
 > for Single-Cell RNA-seq. R package version 0.99.0.

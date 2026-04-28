@@ -179,3 +179,24 @@ test_that("show method for BQCResult prints without error", {
     )
     expect_output(show(obj), "BQCResult")
 })
+
+# ══════════════════════════════════════════════════════════════════════════════
+# inst/ directory: CITATION and extdata
+# ══════════════════════════════════════════════════════════════════════════════
+
+test_that("CITATION file is valid and parseable", {
+    cit_file <- system.file("CITATION", package = "scBatchQC")
+    skip_if(nchar(cit_file) == 0, "Package not installed; skipping CITATION test")
+    cit <- readCitationFile(cit_file)
+    expect_s3_class(cit, "citation")
+    expect_true(length(cit) >= 1)
+})
+
+test_that("pbmc_small.rds in extdata is a valid SingleCellExperiment", {
+    rds_path <- system.file("extdata", "pbmc_small.rds", package = "scBatchQC")
+    skip_if(nchar(rds_path) == 0, "Package not installed; skipping extdata test")
+    sce <- readRDS(rds_path)
+    expect_s4_class(sce, "SingleCellExperiment")
+    expect_true(ncol(sce) > 0)
+    expect_true("batch" %in% names(colData(sce)))
+})

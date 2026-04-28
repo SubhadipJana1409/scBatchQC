@@ -5,3 +5,5 @@
 ^scBatchQC\.Rproj$
 ^scBatchQC\.BiocCheck$
 ^\.Rproj\.user$
+^\.positai$
+^\.claude$
