@@ -28,17 +28,10 @@ low-depth batches** and **under-filtering of high-depth ones**.
 
 ## The problem scBatchQC solves
 
-```
-Standard approach               scBatchQC approach
-(scuttle::isOutlier)
-────────────────────             ──────────────────
-Batch A (fresh, v3)  ──┐        Batch A ← shrunk threshold
-Batch B (cryo, v2)   ──┼─ one   Batch B ← shrunk threshold
-Batch C (low depth)  ──┘  cut   Batch C ← shrunk threshold
-
-Over-filters Batch C             Calibrated per-batch flags
-Under-filters Batch A            Borrow strength across batches
-```
+<p align="center">
+  <img src="man/figures/scrna_qc_gap_diagram.svg" width="680"
+       alt="Current ecosystem vs scBatchQC: existing tools run QC per-batch with global MAD cutoffs, while scBatchQC provides a hierarchical empirical Bayes model that jointly calibrates QC thresholds and doublet rates across batches">
+</p>
 
 ## Installation
 
