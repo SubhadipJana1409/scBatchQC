@@ -1,7 +1,7 @@
 Package: scBatchQC
 Type: Package
 Title: Batch-Aware Cell Quality Control for Single-Cell RNA-seq
-Version: 0.99.0
+Version: 0.99.1
 Authors@R: c(
     person("Subhadip", "Jana", role = c("aut", "cre"),
            email = "subhadipjana1409@gmail.com",
