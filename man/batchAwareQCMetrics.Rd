@@ -30,9 +30,8 @@ percentage). Default: all three.}
 \item{nmads}{A \code{numeric(1)} number of MADs to use as the
 outlier threshold. Default: \code{3}.}
 
-\item{mt_pattern}{A \code{character(1)} regex passed to
-\code{scuttle::perCellQCMetrics} to identify mitochondrial genes.
-Default: \code{"^MT-"}.}
+\item{mt_pattern}{A \code{character(1)} regex used to identify
+mitochondrial genes. Default: \code{"^MT-"}.}
 
 \item{shrink_strength}{A \code{numeric(1)} in \code{[0, 1]} controlling
 how much per-batch estimates are shrunk toward the global prior.

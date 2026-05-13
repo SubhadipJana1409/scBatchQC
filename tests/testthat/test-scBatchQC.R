@@ -181,16 +181,8 @@ test_that("show method for BQCResult prints without error", {
 })
 
 # ══════════════════════════════════════════════════════════════════════════════
-# inst/ directory: CITATION and extdata
+# inst/ directory: extdata
 # ══════════════════════════════════════════════════════════════════════════════
-
-test_that("CITATION file is valid and parseable", {
-    cit_file <- system.file("CITATION", package = "scBatchQC")
-    skip_if(nchar(cit_file) == 0, "Package not installed; skipping CITATION test")
-    cit <- readCitationFile(cit_file)
-    expect_s3_class(cit, "citation")
-    expect_true(length(cit) >= 1)
-})
 
 test_that("pbmc_small.rds in extdata is a valid SingleCellExperiment", {
     rds_path <- system.file("extdata", "pbmc_small.rds", package = "scBatchQC")

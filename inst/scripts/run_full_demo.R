@@ -25,7 +25,7 @@
 ##
 ## Output:
 ##   - Console report with per-batch QC summaries
-##   - scBatchQC_demo_plot.png saved to working directory
+##   - scBatchQC_demo_plot.png saved to man/figures
 ## ------------------------------------------------------------------
 
 library(scBatchQC)
@@ -163,7 +163,11 @@ cat("\n── Step 4: Plotting QC distributions ──\n")
 
 p <- plotBatchQC(sce, batch = "batch")
 
-output_path <- file.path(getwd(), "scBatchQC_demo_plot.png")
+output_dir <- file.path(getwd(), "man", "figures")
+if (!dir.exists(output_dir)) {
+    dir.create(output_dir, recursive = TRUE)
+}
+output_path <- file.path(output_dir, "scBatchQC_demo_plot.png")
 ggplot2::ggsave(output_path, plot = p, width = 8, height = 10, dpi = 150)
 cat(sprintf("Plot saved to: %s\n", output_path))
 

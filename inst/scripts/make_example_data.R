@@ -28,14 +28,14 @@
 ##   source("inst/scripts/make_example_data.R")
 ##
 ## Requirements:
-##   BiocManager::install(c("TENxPBMCData", "scuttle",
-##                          "SingleCellExperiment"))
+##   BiocManager::install(c("TENxPBMCData", "SingleCellExperiment",
+##                          "SummarizedExperiment"))
 ## ------------------------------------------------------------------
 
 suppressPackageStartupMessages({
     library(TENxPBMCData)
     library(SingleCellExperiment)
-    library(scuttle)
+    library(SummarizedExperiment)
 })
 
 set.seed(2026)
@@ -65,8 +65,8 @@ message("Mitochondrial genes found: ", length(mt_idx))
 ## Compute variance PER BATCH separately to avoid cbind rowData conflict
 ## Realise counts to dense matrices for variance computation
 message("Computing gene variances (this may take a moment)...")
-vars_3k <- rowVars(as.matrix(counts(pbmc3k)))
-vars_4k <- rowVars(as.matrix(counts(pbmc4k)))
+vars_3k <- apply(as.matrix(assay(pbmc3k, "counts")), 1, var)
+vars_4k <- apply(as.matrix(assay(pbmc4k, "counts")), 1, var)
 
 ## Average variance across batches
 avg_vars <- (vars_3k + vars_4k) / 2
@@ -97,8 +97,8 @@ sub4k <- pbmc4k[keep_genes, idx_4k]
 gene_symbols <- rowData(sub3k)$Symbol_TENx
 
 ## Realise HDF5-backed counts to in-memory dense matrices
-mat3k <- as.matrix(counts(sub3k))
-mat4k <- as.matrix(counts(sub4k))
+mat3k <- as.matrix(assay(sub3k, "counts"))
+mat4k <- as.matrix(assay(sub4k, "counts"))
 
 ## Combine count matrices directly (no SCE cbind needed)
 combined_counts <- cbind(mat3k, mat4k)

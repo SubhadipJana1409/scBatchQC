@@ -34,9 +34,8 @@
 #'   percentage). Default: all three.
 #' @param nmads A \code{numeric(1)} number of MADs to use as the
 #'   outlier threshold. Default: \code{3}.
-#' @param mt_pattern A \code{character(1)} regex passed to
-#'   \code{scuttle::perCellQCMetrics} to identify mitochondrial genes.
-#'   Default: \code{"^MT-"}.
+#' @param mt_pattern A \code{character(1)} regex used to identify
+#'   mitochondrial genes. Default: \code{"^MT-"}.
 #' @param shrink_strength A \code{numeric(1)} in \code{[0, 1]} controlling
 #'   how much per-batch estimates are shrunk toward the global prior.
 #'   \code{0} = no shrinkage (pure per-batch); \code{1} = full pooling.
@@ -80,10 +79,10 @@
 #' sce <- batchAwareQCMetrics(sce, batch = "batch")
 #' table(sce$scBatchQC_outlier, sce$batch)
 #'
-#' @importFrom scuttle perCellQCMetrics
+#' @importFrom scrapper computeRnaQcMetrics
 #' @importFrom SummarizedExperiment colData assay "colData<-"
 #' @importFrom S4Vectors DataFrame
-#' @importFrom BiocParallel SerialParam
+#' @importFrom BiocParallel SerialParam bpnworkers
 #' @importFrom stats median mad
 #' @export
 batchAwareQCMetrics <- function(sce,
@@ -119,12 +118,12 @@ batchAwareQCMetrics <- function(sce,
         list()
     }
 
-    qc_df <- perCellQCMetrics(sce, subsets = subsets, BPPARAM = BPPARAM)
+    qc_df <- .computeRnaQcDataFrame(sce, subsets = subsets, BPPARAM = BPPARAM)
 
     # Normalise metric names (handle missing MT when no MT genes found)
     available_metrics <- intersect(metrics, names(qc_df))
     if (length(available_metrics) == 0) {
-        stop("None of the requested metrics found in perCellQCMetrics output.")
+        stop("None of the requested metrics found in computeRnaQcMetrics output.")
     }
 
     # ── Determine batch labels ──────────────────────────────
@@ -180,6 +179,45 @@ batchAwareQCMetrics <- function(sce,
 
 
 # ── Internal helpers ────────────────────────────────────────
+
+#' Compute RNA QC metrics as a flat DataFrame
+#'
+#' @keywords internal
+#' @noRd
+.computeRnaQcDataFrame <- function(sce, subsets, BPPARAM) {
+    num_threads <- bpnworkers(BPPARAM)
+    if (length(num_threads) != 1L ||
+        is.na(num_threads) ||
+        !is.finite(num_threads)) {
+        num_threads <- 1L
+    }
+
+    qc_raw <- computeRnaQcMetrics(
+        assay(sce, "counts"),
+        subsets = subsets,
+        num.threads = max(1L, as.integer(num_threads))
+    )
+
+    qc_df <- DataFrame(
+        sum = qc_raw[["sum"]],
+        detected = qc_raw[["detected"]]
+    )
+
+    if ("subsets" %in% names(qc_raw)) {
+        subset_metrics <- qc_raw[["subsets"]]
+        for (subset_name in names(subset_metrics)) {
+            subset_value <- subset_metrics[[subset_name]]
+            if (is.list(subset_value) && "percent" %in% names(subset_value)) {
+                subset_value <- subset_value[["percent"]]
+            }
+
+            qc_df[[paste0("subsets_", subset_name, "_percent")]] <-
+                as.numeric(subset_value) * 100
+        }
+    }
+
+    qc_df
+}
 
 #' Compute harmonized (shrinkage-based) QC thresholds
 #'
