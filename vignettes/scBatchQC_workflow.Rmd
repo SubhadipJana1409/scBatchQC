@@ -36,9 +36,10 @@ high-depth ones.
 
 ## The problem
 
-In multi-batch single-cell RNA-seq experiments, standard QC tools like
-`scuttle::isOutlier` apply a **single global threshold** across all
-cells. This ignores batch-to-batch variation and leads to:
+In multi-batch single-cell RNA-seq experiments, QC thresholds can be
+misleading when they are applied globally across all cells or estimated
+independently for each small batch. This ignores or overreacts to
+batch-to-batch variation and leads to:
  
 - **Over-filtering** of lower-depth batches (good cells removed)
 - **Under-filtering** of higher-depth batches (bad cells kept)
@@ -56,6 +57,27 @@ approach:
 
 The result: each batch gets its own QC thresholds, but small batches
 are stabilised by borrowing information from larger ones.
+
+## How scBatchQC compares to other QC packages
+
+- **scater / scuttle** provide widely used tools for computing per-cell QC
+  metrics, visualizing QC distributions, and identifying MAD-based outliers.
+  `scBatchQC` builds on the same core QC metrics, but focuses on multi-batch
+  experiments by estimating per-batch thresholds and shrinking them toward a
+  shared empirical Bayes prior. This stabilizes thresholds for small or
+  low-depth batches while preserving batch-specific calibration.
+
+- **miQC** uses a probabilistic model based on mitochondrial read proportion
+  and the number of detected genes to identify low-quality cells. `scBatchQC`
+  instead provides a batch-aware thresholding framework for library size,
+  detected genes, and mitochondrial fraction, with harmonized per-batch
+  summaries returned directly in the `SingleCellExperiment`.
+
+- **scDblFinder** detects likely doublets from the expression profiles of
+  individual cells. `scBatchQC::estimateBatchDoubletRate()` is complementary:
+  it estimates the expected doublet rate per batch from experimental metadata
+  such as cells loaded and protocol, which is useful for planning, reporting,
+  and checking expression-based doublet calls.
 
 # Installation
 

@@ -1,7 +1,7 @@
 Package: scBatchQC
 Type: Package
 Title: Batch-Aware Cell Quality Control for Single-Cell RNA-seq
-Version: 0.99.2
+Version: 0.99.3
 Authors@R: c(
     person("Subhadip", "Jana", role = c("aut", "cre"),
            email = "subhadipjana1409@gmail.com",
@@ -19,8 +19,7 @@ Description:
 License: MIT + file LICENSE
 URL: https://github.com/SubhadipJana1409/scBatchQC
 BugReports: https://github.com/SubhadipJana1409/scBatchQC/issues
-biocViews: SingleCell, QualityControl, BatchEffect, StatisticalMethod,
-           Transcriptomics, GeneExpression,CellBasedAssays, Sequencing, WorkflowStep
+biocViews: SingleCell, QualityControl, BatchEffect, StatisticalMethod, Transcriptomics, GeneExpression, CellBasedAssays, Sequencing, WorkflowStep
 Encoding: UTF-8
 LazyData: false
 Depends:
