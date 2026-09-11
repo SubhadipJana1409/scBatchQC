@@ -3,6 +3,7 @@
 <!-- badges -->
 [![Bioc-check](https://github.com/SubhadipJana1409/scBatchQC/actions/workflows/bioc-check.yml/badge.svg)](https://github.com/SubhadipJana1409/scBatchQC/actions)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![GitHub Sponsors](https://img.shields.io/badge/sponsor-GitHub-pink.svg)](https://github.com/sponsors/SubhadipJana1409)
 
 ## Overview
 
@@ -192,6 +193,12 @@ citation("scBatchQC")
 
 Bug reports and feature requests are welcome at
 https://github.com/SubhadipJana1409/scBatchQC/issues
+
+## Supporting this work
+
+If `scBatchQC` helps your research, please consider
+[sponsoring @SubhadipJana1409](https://github.com/sponsors/SubhadipJana1409)
+to support maintenance and new features.
 
 ## License
 
