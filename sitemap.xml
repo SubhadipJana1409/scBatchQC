@@ -1,0 +1,23 @@
+<urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
+<url><loc>/404.html</loc></url>
+<url><loc>/LICENSE-text.html</loc></url>
+<url><loc>/LICENSE.html</loc></url>
+<url><loc>/articles/index.html</loc></url>
+<url><loc>/articles/scBatchQC_workflow.html</loc></url>
+<url><loc>/authors.html</loc></url>
+<url><loc>/index.html</loc></url>
+<url><loc>/news/index.html</loc></url>
+<url><loc>/reference/BQCResult-class.html</loc></url>
+<url><loc>/reference/BQCResult.html</loc></url>
+<url><loc>/reference/batchAwareQCMetrics.html</loc></url>
+<url><loc>/reference/batchSummary.html</loc></url>
+<url><loc>/reference/doubletScores.html</loc></url>
+<url><loc>/reference/estimateBatchDoubletRate.html</loc></url>
+<url><loc>/reference/harmonizeQCThresholds.html</loc></url>
+<url><loc>/reference/index.html</loc></url>
+<url><loc>/reference/plotBatchQC.html</loc></url>
+<url><loc>/reference/qcFlags.html</loc></url>
+<url><loc>/reference/scBatchQC-package.html</loc></url>
+<url><loc>/reference/show-BQCResult-method.html</loc></url>
+</urlset>
+
